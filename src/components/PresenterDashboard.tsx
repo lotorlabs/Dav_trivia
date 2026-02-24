@@ -14,9 +14,20 @@ export const PresenterDashboard: React.FC<Props> = ({ state, onReset }) => {
   const formatNumber = (val: number) => val.toLocaleString();
   const formatCurrencyM = (val: number) => `$${val}M`;
 
-  const totalAssets = state.segments.reduce((acc, s) => acc + s.assets, 0);
-  const questions = getQuestionsForSection(state.currentSection);
+  const totalAssets = (state.segments || []).reduce((acc, s) => acc + (s.assets || 0), 0);
+  const questions = getQuestionsForSection(state.currentSection || 'groups');
   const currentQuestion = questions[state.currentQuestionIndex];
+
+  if (!state.segments || state.segments.length === 0) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white/40 uppercase tracking-widest text-xs">Cargando datos de la matriz...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-8 font-sans">
