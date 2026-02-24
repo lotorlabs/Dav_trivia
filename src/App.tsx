@@ -5,7 +5,15 @@ import { PlayerInterface } from './components/PlayerInterface';
 import { LobbyView } from './components/LobbyView';
 import { HostQuestionView } from './components/HostQuestionView';
 import { db, ref, onValue, set, update, push } from './firebase';
-import { QUESTIONS } from './constants';
+import { 
+  QUESTIONS_GROUPS, 
+  QUESTIONS_PERSONAS, 
+  QUESTIONS_EMPRESAS, 
+  INITIAL_SEGMENTS_GROUPS, 
+  INITIAL_SEGMENTS_PERSONAS, 
+  INITIAL_SEGMENTS_EMPRESAS,
+  getQuestionsForSection 
+} from './constants';
 
 export default function App() {
   const [state, setState] = useState<GameState | null>(null);
@@ -42,14 +50,9 @@ export default function App() {
         // Inicializar estado si está vacío
         const initialState: GameState = {
           status: 'lobby',
+          currentSection: 'groups',
           currentQuestionIndex: -1,
-          segments: [
-            { id: 1, name: "Banca privada", clients: 50, assets: 8000, principality: 0.45, earningPower: 320 },
-            { id: 2, name: "Premium Plus", clients: 250, assets: 4500, principality: 0.35, earningPower: 210 },
-            { id: 3, name: "Premium", clients: 800, assets: 3200, principality: 0.25, earningPower: 140 },
-            { id: 4, name: "Clásico", clients: 2500, assets: 1800, principality: 0.15, earningPower: 90 },
-            { id: 5, name: "Inclusión", clients: 5000, assets: 500, principality: 0.05, earningPower: 40 },
-          ],
+          segments: INITIAL_SEGMENTS_GROUPS,
           revealedColumns: [],
           players: [],
           isAnswerRevealed: false,
@@ -85,8 +88,9 @@ export default function App() {
 
     if (action.type === 'REVEAL_ANSWER') {
       if (!state) return;
-      const currentQuestion = QUESTIONS[state.currentQuestionIndex];
-      const newRevealed = [...state.revealedColumns];
+      const questions = getQuestionsForSection(state.currentSection);
+      const currentQuestion = questions[state.currentQuestionIndex];
+      const newRevealed = [...(state.revealedColumns || [])];
       if (currentQuestion && !newRevealed.includes(currentQuestion.revealColumn)) {
         newRevealed.push(currentQuestion.revealColumn);
       }
@@ -119,12 +123,39 @@ export default function App() {
 
   const handleNext = () => {
     if (!state) return;
-    const nextQuestion = state.currentQuestionIndex + 1;
+    
+    const questions = getQuestionsForSection(state.currentSection);
+    let nextQuestion = state.currentQuestionIndex + 1;
+    let nextSection = state.currentSection;
+    let nextSegments = state.segments;
+    let nextStatus = state.status;
+    let nextRevealedColumns = state.revealedColumns;
+
+    if (nextQuestion >= questions.length) {
+      // Transition to next section
+      if (state.currentSection === 'groups') {
+        nextSection = 'personas';
+        nextSegments = INITIAL_SEGMENTS_PERSONAS;
+        nextQuestion = 0;
+        nextRevealedColumns = [];
+      } else if (state.currentSection === 'personas') {
+        nextSection = 'empresas';
+        nextSegments = INITIAL_SEGMENTS_EMPRESAS;
+        nextQuestion = 0;
+        nextRevealedColumns = [];
+      } else {
+        nextStatus = 'results';
+      }
+    }
     
     sendAction({
       type: 'UPDATE_STATE',
       state: { 
+        currentSection: nextSection,
         currentQuestionIndex: nextQuestion,
+        segments: nextSegments,
+        status: nextStatus,
+        revealedColumns: nextRevealedColumns,
         isAnswerRevealed: false
       }
     });
@@ -139,7 +170,9 @@ export default function App() {
       type: 'UPDATE_STATE',
       state: { 
         status: 'playing',
+        currentSection: 'groups',
         currentQuestionIndex: 0,
+        segments: INITIAL_SEGMENTS_GROUPS,
         revealedColumns: [],
         isAnswerRevealed: false
       }

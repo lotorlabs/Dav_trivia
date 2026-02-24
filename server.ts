@@ -2,7 +2,7 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import { createServer } from "http";
 import { GameState } from "./src/types";
-import { QUESTIONS } from "./src/constants";
+import { INITIAL_SEGMENTS_GROUPS, getQuestionsForSection } from "./src/constants";
 
 async function startServer() {
   const app = express();
@@ -14,14 +14,9 @@ async function startServer() {
   // Initial Game State
   let gameState = {
     status: 'lobby' as const,
+    currentSection: 'groups' as const,
     currentQuestionIndex: -1,
-    segments: [
-      { id: 1, name: "Banca privada", clients: 50, assets: 8000, principality: 0.45, earningPower: 320 },
-      { id: 2, name: "Premium Plus", clients: 250, assets: 4500, principality: 0.35, earningPower: 210 },
-      { id: 3, name: "Premium", clients: 800, assets: 3200, principality: 0.25, earningPower: 140 },
-      { id: 4, name: "Clásico", clients: 2500, assets: 1800, principality: 0.15, earningPower: 90 },
-      { id: 5, name: "Inclusión", clients: 5000, assets: 500, principality: 0.05, earningPower: 40 },
-    ],
+    segments: INITIAL_SEGMENTS_GROUPS,
     revealedColumns: [],
     players: [] as any[],
     isAnswerRevealed: false,
@@ -55,7 +50,8 @@ async function startServer() {
 
       if (data.type === "REVEAL_ANSWER") {
         gameState.isAnswerRevealed = true;
-        const currentQuestion = QUESTIONS[gameState.currentQuestionIndex];
+        const questions = getQuestionsForSection(gameState.currentSection);
+        const currentQuestion = questions[gameState.currentQuestionIndex];
         if (currentQuestion && currentQuestion.revealColumn && !gameState.revealedColumns.includes(currentQuestion.revealColumn)) {
           gameState.revealedColumns.push(currentQuestion.revealColumn);
         }
@@ -70,18 +66,13 @@ async function startServer() {
 
       if (data.type === "RESET") {
         gameState.status = 'lobby';
+        gameState.currentSection = 'groups';
         gameState.currentQuestionIndex = -1;
         gameState.revealedColumns = [];
         gameState.players = [];
         gameState.isAnswerRevealed = false;
         gameState.votes = {};
-        gameState.segments = [
-          { id: 1, name: "Banca privada", clients: 50, assets: 8000, principality: 0.45, earningPower: 320 },
-          { id: 2, name: "Premium Plus", clients: 250, assets: 4500, principality: 0.35, earningPower: 210 },
-          { id: 3, name: "Premium", clients: 800, assets: 3200, principality: 0.25, earningPower: 140 },
-          { id: 4, name: "Clásico", clients: 2500, assets: 1800, principality: 0.15, earningPower: 90 },
-          { id: 5, name: "Inclusión", clients: 5000, assets: 500, principality: 0.05, earningPower: 40 },
-        ];
+        gameState.segments = INITIAL_SEGMENTS_GROUPS;
       }
       res.json({ success: true, state: gameState });
     } catch (e) {

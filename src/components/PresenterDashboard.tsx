@@ -1,6 +1,6 @@
 import React from 'react';
 import { GameState } from '../types';
-import { QUESTIONS } from '../constants';
+import { getQuestionsForSection } from '../constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { Users, TrendingUp, ShieldCheck, Zap, RotateCcw } from 'lucide-react';
 
@@ -15,6 +15,8 @@ export const PresenterDashboard: React.FC<Props> = ({ state, onReset }) => {
   const formatCurrencyM = (val: number) => `$${val}M`;
 
   const totalAssets = state.segments.reduce((acc, s) => acc + s.assets, 0);
+  const questions = getQuestionsForSection(state.currentSection);
+  const currentQuestion = questions[state.currentQuestionIndex];
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-8 font-sans">
@@ -23,7 +25,11 @@ export const PresenterDashboard: React.FC<Props> = ({ state, onReset }) => {
           <h1 className="text-5xl font-bold tracking-tighter uppercase italic font-serif">
             Trivia Davivienda <span className="text-red-600">Live</span>
           </h1>
-          <p className="text-white/50 mt-2 uppercase tracking-widest text-xs">Visualización de Matriz Estratégica</p>
+          <p className="text-white/50 mt-2 uppercase tracking-widest text-xs">
+            {state.currentSection === 'groups' && 'Fase 1: Grupos de Banca'}
+            {state.currentSection === 'personas' && 'Fase 2: Segmentos Banca Personas'}
+            {state.currentSection === 'empresas' && 'Fase 3: Segmentos Banca Empresas'}
+          </p>
         </div>
         
         <div className="text-right">
@@ -37,7 +43,7 @@ export const PresenterDashboard: React.FC<Props> = ({ state, onReset }) => {
         </div>
       </header>
 
-      {state.status === 'playing' && state.currentQuestionIndex >= 0 && (
+      {state.status === 'playing' && state.currentQuestionIndex >= 0 && currentQuestion && (
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -46,15 +52,15 @@ export const PresenterDashboard: React.FC<Props> = ({ state, onReset }) => {
           <div className="flex-1">
             <div className="text-[10px] uppercase tracking-[0.3em] text-red-600 font-bold mb-2">Pregunta en Curso</div>
             <h2 className="text-4xl font-serif italic font-medium leading-tight">
-              {QUESTIONS[state.currentQuestionIndex]?.text}
+              {currentQuestion.text}
             </h2>
           </div>
           
           <div className="flex gap-4">
-            {QUESTIONS[state.currentQuestionIndex]?.options.map((option, idx) => (
+            {currentQuestion.options.map((option, idx) => (
               <div key={idx} className="flex flex-col items-center">
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg mb-2 ${
-                  state.isAnswerRevealed && idx === QUESTIONS[state.currentQuestionIndex].correctOptionIndex
+                  state.isAnswerRevealed && idx === currentQuestion.correctOptionIndex
                     ? 'bg-red-600 text-white'
                     : 'bg-white/10 text-white/40'
                 }`}>

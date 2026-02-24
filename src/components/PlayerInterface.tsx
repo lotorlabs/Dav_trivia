@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GameState, Question } from '../types';
-import { QUESTIONS } from '../constants';
+import { getQuestionsForSection } from '../constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { Play, RotateCcw, ChevronRight, User, Send } from 'lucide-react';
 
@@ -18,14 +18,16 @@ import { Play, RotateCcw, ChevronRight, User, Send } from 'lucide-react';
   const [isJoined, setIsJoined] = useState(false);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
+  const questions = getQuestionsForSection(state.currentSection);
+
   // Reset selected option when question changes
   // Moved to top to follow Rules of Hooks
   React.useEffect(() => {
     setSelectedOption(null);
-  }, [state.currentQuestionIndex]);
+  }, [state.currentQuestionIndex, state.currentSection]);
 
-  const currentQuestion = (state.currentQuestionIndex >= 0 && state.currentQuestionIndex < QUESTIONS.length) 
-    ? QUESTIONS[state.currentQuestionIndex] 
+  const currentQuestion = (state.currentQuestionIndex >= 0 && state.currentQuestionIndex < questions.length) 
+    ? questions[state.currentQuestionIndex] 
     : null;
 
   const handleJoin = (e: React.FormEvent) => {
@@ -73,7 +75,7 @@ import { Play, RotateCcw, ChevronRight, User, Send } from 'lucide-react';
     );
   }
 
-  if (state.currentQuestionIndex >= QUESTIONS.length) {
+  if (state.currentQuestionIndex >= questions.length && state.status === 'results') {
     return (
       <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center p-6">
         <motion.div 
@@ -156,7 +158,7 @@ import { Play, RotateCcw, ChevronRight, User, Send } from 'lucide-react';
         <div className="flex justify-between items-center mb-12">
           <div className="flex items-center gap-4">
             <div className="px-4 py-1 bg-black text-white rounded-full text-xs font-bold uppercase tracking-widest">
-              Pregunta {state.currentQuestionIndex + 1} / {QUESTIONS.length}
+              Pregunta {state.currentQuestionIndex + 1} / {questions.length}
             </div>
           </div>
           <div className="font-bold text-gray-400 uppercase text-xs tracking-widest">

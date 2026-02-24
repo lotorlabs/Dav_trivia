@@ -1,6 +1,6 @@
 import React from 'react';
 import { GameState } from '../types';
-import { QUESTIONS } from '../constants';
+import { getQuestionsForSection } from '../constants';
 import { motion } from 'motion/react';
 import { Eye, ChevronRight, RotateCcw, Play } from 'lucide-react';
 
@@ -14,7 +14,8 @@ interface Props {
 }
 
 export const HostQuestionView: React.FC<Props> = ({ state, onReveal, onNext, onReset, onStart, onSimulateVote }) => {
-  const currentQuestion = QUESTIONS[state.currentQuestionIndex];
+  const questions = getQuestionsForSection(state.currentSection);
+  const currentQuestion = questions[state.currentQuestionIndex];
 
   if (state.status === 'lobby') {
     return (
@@ -54,7 +55,12 @@ export const HostQuestionView: React.FC<Props> = ({ state, onReveal, onNext, onR
       <header className="flex justify-between items-center mb-12 border-b border-white/10 pb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Panel de Control del Host</h1>
-          <p className="text-white/40 text-sm uppercase tracking-widest">Pregunta {state.currentQuestionIndex + 1} de {QUESTIONS.length}</p>
+          <p className="text-white/40 text-sm uppercase tracking-widest">
+            {state.currentSection === 'groups' && 'Fase 1: Grupos'}
+            {state.currentSection === 'personas' && 'Fase 2: Personas'}
+            {state.currentSection === 'empresas' && 'Fase 3: Empresas'}
+            {' | '} Pregunta {state.currentQuestionIndex + 1} de {questions.length}
+          </p>
         </div>
         <button onClick={onReset} className="text-white/20 hover:text-white transition-colors">
           <RotateCcw size={20} />

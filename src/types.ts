@@ -15,6 +15,7 @@ export interface Player {
 
 export interface GameState {
   status: 'lobby' | 'playing' | 'results';
+  currentSection: 'groups' | 'personas' | 'empresas';
   currentQuestionIndex: number;
   segments: Segment[];
   revealedColumns: string[];
