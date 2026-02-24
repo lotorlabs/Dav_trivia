@@ -90,9 +90,18 @@ export default function App() {
       if (!state) return;
       const questions = getQuestionsForSection(state.currentSection);
       const currentQuestion = questions[state.currentQuestionIndex];
-      const newRevealed = [...(state.revealedColumns || [])];
-      if (currentQuestion && !newRevealed.includes(currentQuestion.revealColumn)) {
-        newRevealed.push(currentQuestion.revealColumn);
+      let newRevealed = [...(state.revealedColumns || [])];
+      
+      if (currentQuestion) {
+        if (currentQuestion.revealColumn === 'all') {
+          // Revelar todas las métricas clave
+          const allMetrics = ['clients', 'activeClients', 'assets', 'principality', 'earningPower'];
+          allMetrics.forEach(m => {
+            if (!newRevealed.includes(m)) newRevealed.push(m);
+          });
+        } else if (!newRevealed.includes(currentQuestion.revealColumn)) {
+          newRevealed.push(currentQuestion.revealColumn);
+        }
       }
       update(gameRef, { isAnswerRevealed: true, revealedColumns: newRevealed });
     }

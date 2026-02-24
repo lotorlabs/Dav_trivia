@@ -2,7 +2,8 @@ export interface Segment {
   id: number;
   name: string;
   clients: number;
-  assets: number; // Total assets
+  activeClients: number;
+  assets: number; // Total assets (money)
   principality: number; // % of assets (0-1)
   earningPower: number;
 }

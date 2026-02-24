@@ -1,49 +1,49 @@
 import { Question, Segment } from "./types";
 
 export const INITIAL_SEGMENTS_GROUPS: Segment[] = [
-  { id: 101, name: "Banca Personas", clients: 8600, assets: 18000, principality: 0.25, earningPower: 800 },
-  { id: 102, name: "Banca Empresas", clients: 1200, assets: 25000, principality: 0.35, earningPower: 1200 },
+  { id: 101, name: "Banca Personas", clients: 8600, activeClients: 6200, assets: 18000, principality: 0.25, earningPower: 800 },
+  { id: 102, name: "Banca Empresas", clients: 1200, activeClients: 950, assets: 25000, principality: 0.35, earningPower: 1200 },
 ];
 
 export const INITIAL_SEGMENTS_PERSONAS: Segment[] = [
-  { id: 1, name: "Banca privada", clients: 50, assets: 8000, principality: 0.45, earningPower: 320 },
-  { id: 2, name: "Premium Plus", clients: 250, assets: 4500, principality: 0.35, earningPower: 210 },
-  { id: 3, name: "Premium", clients: 800, assets: 3200, principality: 0.25, earningPower: 140 },
-  { id: 4, name: "Clásico", clients: 2500, assets: 1800, principality: 0.15, earningPower: 90 },
-  { id: 5, name: "Inclusión", clients: 5000, assets: 500, principality: 0.05, earningPower: 40 },
+  { id: 1, name: "Banca privada", clients: 50, activeClients: 45, assets: 8000, principality: 0.45, earningPower: 320 },
+  { id: 2, name: "Premium Plus", clients: 250, activeClients: 210, assets: 4500, principality: 0.35, earningPower: 210 },
+  { id: 3, name: "Premium", clients: 800, activeClients: 650, assets: 3200, principality: 0.25, earningPower: 140 },
+  { id: 4, name: "Clásico", clients: 2500, activeClients: 1800, assets: 1800, principality: 0.15, earningPower: 90 },
+  { id: 5, name: "Inclusión", clients: 5000, activeClients: 3200, assets: 500, principality: 0.05, earningPower: 40 },
 ];
 
 export const INITIAL_SEGMENTS_EMPRESAS: Segment[] = [
-  { id: 11, name: "Corporativo", clients: 40, assets: 12000, principality: 0.55, earningPower: 500 },
-  { id: 12, name: "Empresarial", clients: 120, assets: 6500, principality: 0.45, earningPower: 350 },
-  { id: 13, name: "Pyme Grande", clients: 350, assets: 4200, principality: 0.35, earningPower: 220 },
-  { id: 14, name: "Pyme Pequeña", clients: 850, assets: 1800, principality: 0.25, earningPower: 110 },
-  { id: 15, name: "Mi Pyme", clients: 2200, assets: 500, principality: 0.15, earningPower: 45 },
+  { id: 11, name: "Corporativo", clients: 40, activeClients: 38, assets: 12000, principality: 0.55, earningPower: 500 },
+  { id: 12, name: "Empresarial", clients: 120, activeClients: 110, assets: 6500, principality: 0.45, earningPower: 350 },
+  { id: 13, name: "Pyme Grande", clients: 350, activeClients: 290, assets: 4200, principality: 0.35, earningPower: 220 },
+  { id: 14, name: "Pyme Pequeña", clients: 850, activeClients: 620, assets: 1800, principality: 0.25, earningPower: 110 },
+  { id: 15, name: "Mi Pyme", clients: 2200, activeClients: 1400, assets: 500, principality: 0.15, earningPower: 45 },
 ];
 
 export const QUESTIONS_GROUPS: Question[] = [
   {
     id: 101,
+    text: "¿Cuál es el total de clientes de Banca Personas?",
+    revealColumn: "clients",
+    correctOptionIndex: 0,
+    options: [
+      { text: "8,600", impact: [] },
+      { text: "5,000", impact: [] },
+      { text: "1,200", impact: [] },
+      { text: "10,000", impact: [] }
+    ]
+  },
+  {
+    id: 102,
     text: "¿Cuál es el Earning Power total estimado de Banca Empresas?",
-    revealColumn: "earningPower",
+    revealColumn: "all", // Special value to trigger full reveal in App.tsx
     correctOptionIndex: 0,
     options: [
       { text: "$1200M", impact: [] },
       { text: "$800M", impact: [] },
       { text: "$2000M", impact: [] },
       { text: "$500M", impact: [] }
-    ]
-  },
-  {
-    id: 102,
-    text: "¿Qué porcentaje de principalidad tiene Banca Personas?",
-    revealColumn: "principality",
-    correctOptionIndex: 0,
-    options: [
-      { text: "25.0%", impact: [] },
-      { text: "35.0%", impact: [] },
-      { text: "45.0%", impact: [] },
-      { text: "15.0%", impact: [] }
     ]
   }
 ];

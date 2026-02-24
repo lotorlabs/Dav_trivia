@@ -11,8 +11,17 @@ interface Props {
 
 export const PresenterDashboard: React.FC<Props> = ({ state, onReset }) => {
   const formatPercent = (val: number) => (val * 100).toFixed(1) + '%';
-  const formatNumber = (val: number) => val.toLocaleString();
-  const formatCurrencyM = (val: number) => `$${val}M`;
+  
+  const formatNumber = (val: number) => {
+    if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
+    if (val >= 1000) return (val / 1000).toFixed(1) + 'K';
+    return val.toLocaleString();
+  };
+
+  const formatCurrency = (val: number) => {
+    if (val >= 1000) return `$${(val / 1000).toFixed(1)}B`; // Assuming M -> B if it's already in M
+    return `$${val}M`;
+  };
 
   const totalAssets = (state.segments || []).reduce((acc, s) => acc + (s.assets || 0), 0);
   const questions = getQuestionsForSection(state.currentSection || 'groups');
@@ -97,7 +106,7 @@ export const PresenterDashboard: React.FC<Props> = ({ state, onReset }) => {
 
         {/* Data Rows */}
         {state.segments.map((segment, idx) => {
-          const assetsPercent = totalAssets > 0 ? segment.assets / totalAssets : 0;
+          const activePercent = segment.clients > 0 ? segment.activeClients / segment.clients : 0;
           const isRevealed = (col: string) => state.revealedColumns.includes(col);
           
           return (
@@ -130,7 +139,7 @@ export const PresenterDashboard: React.FC<Props> = ({ state, onReset }) => {
                       <div className="w-full bg-white/5 h-1 mt-2 rounded-full overflow-hidden">
                         <motion.div 
                           initial={{ width: 0 }}
-                          animate={{ width: `${Math.min(100, (segment.clients / 2500) * 100)}%` }}
+                          animate={{ width: `${Math.min(100, (segment.clients / 10000) * 100)}%` }}
                           className="bg-red-600 h-full" 
                         />
                       </div>
@@ -145,16 +154,16 @@ export const PresenterDashboard: React.FC<Props> = ({ state, onReset }) => {
 
               <div className="flex flex-col justify-center p-6">
                 <AnimatePresence mode="wait">
-                  {isRevealed('assets') || isRevealed('assetsPerClient') ? (
+                  {isRevealed('assets') || isRevealed('activeClients') ? (
                     <motion.div
                       key="revealed"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                     >
                       <span className="text-3xl font-mono font-light tracking-tighter">
-                        {formatPercent(assetsPercent)}
+                        {formatPercent(activePercent)}
                       </span>
-                      <span className="text-[10px] text-white/30 uppercase mt-1">Cuota de Activos</span>
+                      <span className="text-[10px] text-white/30 uppercase mt-1">Clientes Activos</span>
                     </motion.div>
                   ) : (
                     <div className="h-10 w-full bg-white/5 rounded-lg animate-pulse flex items-center justify-center">
@@ -202,7 +211,7 @@ export const PresenterDashboard: React.FC<Props> = ({ state, onReset }) => {
                       className="flex flex-col items-end"
                     >
                       <span className="text-4xl font-mono font-bold tracking-tighter text-white">
-                        {formatCurrencyM(segment.earningPower)}
+                        {formatCurrency(segment.earningPower)}
                       </span>
                       <span className="text-[10px] text-white/30 uppercase mt-1">Earning Power</span>
                     </motion.div>
