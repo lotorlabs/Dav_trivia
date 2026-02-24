@@ -4,6 +4,8 @@ import { PresenterDashboard } from './components/PresenterDashboard';
 import { PlayerInterface } from './components/PlayerInterface';
 import { LobbyView } from './components/LobbyView';
 import { HostQuestionView } from './components/HostQuestionView';
+import { db, ref, onValue, set, update, push } from './firebase';
+import { QUESTIONS } from './constants';
 
 export default function App() {
   const [state, setState] = useState<GameState | null>(null);
@@ -17,38 +19,89 @@ export default function App() {
   });
 
   useEffect(() => {
-    // Polling mechanism instead of WebSocket
-    const fetchState = async () => {
-      try {
-        const response = await fetch('/api/state');
-        if (response.ok) {
-          const data = await response.json();
-          setState(data);
-        }
-      } catch (err) {
-        console.error('Polling error:', err);
+    const gameRef = ref(db, 'gameState');
+    
+    // Escuchar cambios en tiempo real
+    const unsubscribe = onValue(gameRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        // Convertir el objeto de jugadores de Firebase a un array
+        const playersArray = data.players 
+          ? Object.entries(data.players).map(([key, value]: [string, any]) => ({
+              ...value,
+              firebaseKey: key // Opcional, por si necesitas borrarlo luego
+            }))
+          : [];
+        
+        setState({
+          ...data,
+          players: playersArray,
+          votes: data.votes || {}
+        });
+      } else {
+        // Inicializar estado si está vacío
+        const initialState: GameState = {
+          status: 'lobby',
+          currentQuestionIndex: -1,
+          segments: [
+            { id: 1, name: "Banca privada", clients: 50, assets: 8000, principality: 0.45, earningPower: 320 },
+            { id: 2, name: "Premium Plus", clients: 250, assets: 4500, principality: 0.35, earningPower: 210 },
+            { id: 3, name: "Premium", clients: 800, assets: 3200, principality: 0.25, earningPower: 140 },
+            { id: 4, name: "Clásico", clients: 2500, assets: 1800, principality: 0.15, earningPower: 90 },
+            { id: 5, name: "Inclusión", clients: 5000, assets: 500, principality: 0.05, earningPower: 40 },
+          ],
+          revealedColumns: [],
+          players: [],
+          isAnswerRevealed: false,
+          votes: {}
+        };
+        set(gameRef, initialState);
       }
-    };
+    });
 
-    fetchState(); // Initial fetch
-    const interval = setInterval(fetchState, 2000); // Poll every 2 seconds
-
-    return () => clearInterval(interval);
+    return () => unsubscribe();
   }, []);
 
   const sendAction = async (action: any) => {
-    try {
-      const response = await fetch('/api/action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(action)
+    const gameRef = ref(db, 'gameState');
+    
+    if (action.type === 'PLAYER_JOIN') {
+      const playersRef = ref(db, 'gameState/players');
+      push(playersRef, {
+        id: Math.random().toString(36).substr(2, 9),
+        name: action.name,
+        score: 0
       });
-      if (response.ok) {
-        const data = await response.json();
-        setState(data.state);
+    }
+
+    if (action.type === 'UPDATE_STATE') {
+      // Si cambia la pregunta, reseteamos votos
+      if (action.state.currentQuestionIndex !== undefined && action.state.currentQuestionIndex !== state?.currentQuestionIndex) {
+        update(gameRef, { ...action.state, votes: {} });
+      } else {
+        update(gameRef, action.state);
       }
-    } catch (err) {
-      console.error('Action error:', err);
+    }
+
+    if (action.type === 'REVEAL_ANSWER') {
+      if (!state) return;
+      const currentQuestion = QUESTIONS[state.currentQuestionIndex];
+      const newRevealed = [...state.revealedColumns];
+      if (currentQuestion && !newRevealed.includes(currentQuestion.revealColumn)) {
+        newRevealed.push(currentQuestion.revealColumn);
+      }
+      update(gameRef, { isAnswerRevealed: true, revealedColumns: newRevealed });
+    }
+
+    if (action.type === 'PLAYER_ANSWER') {
+      const { optionIdx } = action.payload;
+      const voteRef = ref(db, `gameState/votes/${optionIdx}`);
+      const currentVotes = state?.votes?.[optionIdx] || 0;
+      set(voteRef, currentVotes + 1);
+    }
+
+    if (action.type === 'RESET') {
+      set(gameRef, null); // Esto disparará la reinicialización en el useEffect
     }
   };
 
